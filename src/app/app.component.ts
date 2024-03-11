@@ -29,12 +29,14 @@ export class AppComponent {
 
     if (this.isLoggedIn) {
       const user = this.storageService.getUser();
-      this.roles = user.roles;
+      if (user && user.roles) {
+        this.roles = user.roles;
 
-      this.showAdminBoard = this.roles.includes('ROLE_ADMIN');
-      this.showModeratorBoard = this.roles.includes('ROLE_MODERATOR');
+        this.showAdminBoard = this.roles.includes('ADMIN');
+        this.showModeratorBoard = this.roles.includes('MODERATOR');
 
-      this.username = user.username;
+        this.username = user.username;
+      }
     }
 
     this.eventBusSub = this.eventBusService.on('logout', () => {

@@ -1,37 +1,59 @@
 import { Injectable } from '@angular/core';
-
-const USER_KEY = 'auth-user';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StorageService {
-  constructor() {}
+  private API_URL = 'http://localhost:3010/auth/session';
+
+  constructor(private http: HttpClient) {}
 
   clean(): void {
     window.sessionStorage.clear();
   }
 
   public saveUser(user: any): void {
-    window.sessionStorage.removeItem(USER_KEY);
-    window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    window.sessionStorage.setItem('auth-user', JSON.stringify(user));
   }
 
   public getUser(): any {
-    const user = window.sessionStorage.getItem(USER_KEY);
+    const user = window.sessionStorage.getItem('auth-user');
     if (user) {
       return JSON.parse(user);
     }
-
     return null;
   }
 
   public isLoggedIn(): boolean {
-    const user = window.sessionStorage.getItem(USER_KEY);
-    if (user) {
-      return true;
-    }
+    return !!this.getUser();
+  }
 
-    return false;
+  public getUserRole(): Observable<string> {
+    return this.http.post<any>(this.API_URL, {}).pipe(
+      map(data => {
+        if (data && data.role) {
+          this.saveUser(data);
+          return data.role;
+        } else {
+          throw new Error('Failed to get user role');
+        }
+      })
+    );
+  }
+
+  public getUserInfo(): Observable<any> {
+    return this.http.post<any>(this.API_URL, {}).pipe(
+      map(data => {
+        if (data) {
+          this.saveUser(data);
+          return data;
+        } else {
+          throw new Error('Failed to get user info');
+        }
+      })
+    );
   }
 }
